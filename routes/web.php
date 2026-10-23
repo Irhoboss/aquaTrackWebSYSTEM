@@ -1,9 +1,20 @@
 <?php
 
 use App\Http\Controllers\{AlertController, AuditController, AuthController, ContainerController, DashboardController,
-    InventoryController, MonitoringController, NotificationController, ProfileController, ReportController, StorefrontController, SupportChatController,
+    DriverController, InventoryController, MonitoringController, NotificationController, OrderManagementController, ProfileController, ReportController, StorefrontController, SupportChatController,
     SettingController, StockController, SupplierController, UserController};
 use Illuminate\Support\Facades\Route;
+
+Route::get('/', function () {
+    $products = \App\Models\Product::query()
+        ->where('is_active', true)
+        ->where('stock', '>', 0)
+        ->orderBy('name')
+        ->take(4)
+        ->get();
+
+    return view('landing', compact('products'));
+})->name('home');
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
@@ -18,7 +29,6 @@ Route::middleware('guest')->group(function () {
 
 Route::middleware(['auth', 'active'])->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
-    Route::get('/', fn () => redirect()->route(auth()->user()->role === 'customer' ? 'store.index' : 'dashboard'));
     Route::get('/shop', [StorefrontController::class, 'index'])->middleware('can:shop.view')->name('store.index');
     Route::middleware('can:shop.view')->group(function () {
         Route::get('/cart', [StorefrontController::class, 'cart'])->name('cart.index');
@@ -33,6 +43,18 @@ Route::middleware(['auth', 'active'])->group(function () {
     Route::get('/support-chat', [SupportChatController::class, 'index'])->name('support-chat.index');
     Route::get('/support-chat/updates', [SupportChatController::class, 'updates'])->name('support-chat.updates');
     Route::post('/support-chat', [SupportChatController::class, 'store'])->name('support-chat.store');
+
+    Route::middleware('can:driver.access')->prefix('driver')->name('driver.')->group(function () {
+        Route::get('/', [DriverController::class, 'index'])->name('dashboard');
+        Route::get('/scan', [DriverController::class, 'scan'])->name('scan');
+        Route::post('/scan/order', [DriverController::class, 'updateOrder'])->name('scan.order');
+        Route::post('/scan/container', [DriverController::class, 'updateContainer'])->name('scan.container');
+    });
+
+    Route::middleware('can:orders.manage')->prefix('orders/manage')->name('operations.orders.')->group(function () {
+        Route::get('/', [OrderManagementController::class, 'index'])->name('index');
+        Route::patch('/{order}/status', [OrderManagementController::class, 'update'])->name('status');
+    });
 
     // Profile (everyone)
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');

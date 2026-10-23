@@ -24,8 +24,16 @@
       ['settings.index', 'bi-sliders', 'Settings', 'settings.manage', 'settings.*'],
     ],
   ];
+  if (auth()->user()->role === 'driver') {
+    $groups = ['Driver' => [
+      ['driver.dashboard', 'bi-speedometer2', 'Delivery home', 'driver.access', 'driver.dashboard'],
+      ['driver.scan', 'bi-qr-code-scan', 'Scan QR code', 'driver.access', 'driver.scan'],
+    ]];
+  } else {
+    $groups['Operations'][] = ['operations.orders.index', 'bi-receipt', 'Orders', 'orders.manage', 'operations.orders.*'];
+  }
 @endphp
-<a href="{{ auth()->user()->role === 'customer' ? route('store.index') : route('dashboard') }}" class="at-brand">
+<a href="{{ auth()->user()->role === 'customer' ? route('store.index') : (auth()->user()->role === 'driver' ? route('driver.dashboard') : route('dashboard')) }}" class="at-brand">
   @if($brand['logo'])<img src="{{ $brand['logo'] }}" alt="">@else<span class="at-drop"><i class="bi bi-droplet-fill"></i></span>@endif
   <span>AquaTrack<small class="d-block fw-semibold text-muted" style="font-size:.7rem">{{ \Illuminate\Support\Str::limit($brand['name'], 26) }}</small></span>
 </a>

@@ -7,19 +7,21 @@
  */
 return [
     'roles' => [
+        'admin' => ['*'],
         'owner' => ['*'],
         'manager' => [
             'dashboard.view', 'monitoring.view', 'alerts.view', 'alerts.manage',
             'inventory.view', 'inventory.manage', 'stock.move',
             'suppliers.manage',
             'containers.view', 'containers.manage', 'inspections.record',
-            'reports.view', 'audit.view', 'support.chat',
+            'reports.view', 'audit.view', 'support.chat', 'orders.manage',
         ],
         'staff' => [
             'dashboard.view', 'alerts.view',
             'inventory.view', 'stock.move',
-            'containers.view', 'inspections.record', 'support.chat',
+            'containers.view', 'inspections.record', 'support.chat', 'orders.manage',
         ],
+        'driver' => ['driver.access'],
         'customer' => ['shop.view', 'support.chat'],
     ],
     // Abilities only the Owner has (documented for clarity; owner has '*'):

@@ -27,7 +27,7 @@ cd aquatrack
 #    DB_PASSWORD=
 #    APP_TIMEZONE stays UTC (storage). Display time is Asia/Manila: APP_DISPLAY_TZ=Asia/Manila
 #    MAIL_MAILER=log        (password-reset links appear in storage/logs/laravel.log)
-#    AQUATRACK_ADMIN_PASSWORD=ChangeMe!2026   (optional: choose your own temporary password)
+#    AQUATRACK_ADMIN_PASSWORD=admin123        (optional: choose a different initial password)
 
 php artisan key:generate
 php artisan migrate --seed
@@ -40,22 +40,23 @@ Delete Laravel's sample tests in `tests/` (they do not know about the login redi
 
 Optional demo data (sample users, items, containers, 24 h of readings): `php artisan db:seed --class=DemoSeeder`.
 
-**First login:** username `admin`, password `ChangeMe!2026` (or your `AQUATRACK_ADMIN_PASSWORD`). You are forced to change it immediately. Demo accounts (`manager`, `staff`) behave the same way.
+**Local administrator login:** username `admin`, password `admin123` (or the value of `AQUATRACK_ADMIN_PASSWORD` when seeding a fresh database). The `staff` and `driver` accounts created by `DatabaseSeeder` use `AQUATRACK_STAFF_PASSWORD` / `AQUATRACK_DRIVER_PASSWORD` or the defaults `Staff!2026` / `Driver!2026`; both must change their password on first login. Passwords for accounts already created in the database cannot be read back because only password hashes are stored.
 
 ## 3. Roles
 Permissions live in **one file**: `config/permissions.php` (role → abilities). Routes use `can:<ability>` middleware and Blade uses `@can`, so the backend enforces it, not just the menu.
 
-| Area | Owner | Manager | Staff |
-|---|:-:|:-:|:-:|
-| Dashboard | yes | yes | yes (no pH cards) |
-| pH monitoring & history | yes | yes | no |
-| Alerts: view / acknowledge+resolve | yes / yes | yes / yes | own types / no |
-| Inventory view / manage / stock moves | yes | yes | view + stock moves |
-| Suppliers | yes | yes | no |
-| Containers view / manage / inspections | yes | yes | view + inspections |
-| Reports | all | operational | no |
-| Audit log | yes | yes | no |
-| Users, settings, devices, negative-stock exception | yes | no | no |
+| Area | Admin / Owner | Manager | Staff | Driver |
+|---|:-:|:-:|:-:|:-:|
+| Dashboard | yes | yes | yes (no pH cards) | dedicated delivery dashboard |
+| pH monitoring & history | yes | yes | no | no |
+| Alerts: view / acknowledge+resolve | yes / yes | yes / yes | own types / no | no |
+| Inventory view / manage / stock moves | yes | yes | view + stock moves | no |
+| Suppliers | yes | yes | no | no |
+| Containers view / manage / inspections | yes | yes | view + inspections | scan QR; toggle available/in use |
+| Orders | full | manage | process status | scan QR; complete/retry delivery |
+| Reports | all | operational | no | no |
+| Audit log | yes | yes | no | no |
+| Users, settings, devices, negative-stock exception | yes | no | no | no |
 
 ## 4. Connect the ESP32
 1. Read `docs/HARDWARE.md` (voltage divider is required: the module can output up to 5 V, the ESP32 ADC takes 3.3 V max).

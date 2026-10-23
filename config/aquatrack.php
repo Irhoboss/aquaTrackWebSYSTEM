@@ -30,14 +30,14 @@ return [
 
     // Which roles receive which alert types.
     'alert_roles' => [
-        'ph_low'             => ['owner', 'manager'],
-        'ph_high'            => ['owner', 'manager'],
-        'sensor_offline'     => ['owner', 'manager'],
-        'sensor_invalid'     => ['owner', 'manager'],
-        'low_stock'          => ['owner', 'manager', 'staff'],
-        'out_of_stock'       => ['owner', 'manager', 'staff'],
-        'inspection_overdue' => ['owner', 'manager', 'staff'],
-        'replacement_due'    => ['owner', 'manager', 'staff'],
+        'ph_low'             => ['admin', 'owner', 'manager'],
+        'ph_high'            => ['admin', 'owner', 'manager'],
+        'sensor_offline'     => ['admin', 'owner', 'manager'],
+        'sensor_invalid'     => ['admin', 'owner', 'manager'],
+        'low_stock'          => ['admin', 'owner', 'manager', 'staff'],
+        'out_of_stock'       => ['admin', 'owner', 'manager', 'staff'],
+        'inspection_overdue' => ['admin', 'owner', 'manager', 'staff'],
+        'replacement_due'    => ['admin', 'owner', 'manager', 'staff'],
     ],
 
     'alert_types' => [

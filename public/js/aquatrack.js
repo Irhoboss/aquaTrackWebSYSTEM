@@ -18,6 +18,51 @@
     if (e.target.closest('[data-theme-toggle]')) setTheme(root.dataset.theme === 'dark' ? 'light' : 'dark');
   });
 
+  const sidebarButtons = document.querySelectorAll('[data-sidebar-toggle]');
+  const syncSidebarButton = () => sidebarButtons.forEach(button => {
+    const hidden = document.body.classList.contains('sidebar-off');
+    button.setAttribute('aria-pressed', String(hidden));
+    button.setAttribute('aria-label', hidden ? 'Show sidebar' : 'Hide sidebar');
+    button.title = hidden ? 'Show sidebar' : 'Hide sidebar';
+    const icon = button.querySelector('i');
+    if (icon) icon.className = `bi ${hidden ? 'bi-layout-sidebar' : 'bi-layout-sidebar-inset'}`;
+  });
+  try {
+    if (localStorage.getItem('aq-sidebar') === 'off') document.body.classList.add('sidebar-off');
+  } catch (e) { }
+  syncSidebarButton();
+  sidebarButtons.forEach(button => button.addEventListener('click', () => {
+    document.body.classList.toggle('sidebar-off');
+    try { localStorage.setItem('aq-sidebar', document.body.classList.contains('sidebar-off') ? 'off' : 'on'); } catch (e) { }
+    syncSidebarButton();
+  }));
+
+  // Add an accessible show/hide control to every password field.
+  document.querySelectorAll('input[type="password"]:not([data-no-password-toggle])').forEach(input => {
+    if (input.dataset.passwordToggleReady) return;
+    input.dataset.passwordToggleReady = '1';
+    const field = document.createElement('span');
+    field.className = 'password-field';
+    input.parentNode.insertBefore(field, input);
+    field.appendChild(input);
+
+    const toggle = document.createElement('button');
+    toggle.type = 'button';
+    toggle.className = 'password-toggle';
+    toggle.setAttribute('aria-label', 'Show password');
+    toggle.setAttribute('aria-pressed', 'false');
+    toggle.innerHTML = '<i class="bi bi-eye" aria-hidden="true"></i>';
+    toggle.addEventListener('click', () => {
+      const reveal = input.type === 'password';
+      input.type = reveal ? 'text' : 'password';
+      toggle.setAttribute('aria-label', reveal ? 'Hide password' : 'Show password');
+      toggle.setAttribute('aria-pressed', String(reveal));
+      toggle.innerHTML = `<i class="bi ${reveal ? 'bi-eye-slash' : 'bi-eye'}" aria-hidden="true"></i>`;
+      input.focus({ preventScroll: true });
+    });
+    field.appendChild(toggle);
+  });
+
   // Confirm destructive / important actions with a focused app modal.
   let confirmForm = null;
   let confirmSubmitter = null;

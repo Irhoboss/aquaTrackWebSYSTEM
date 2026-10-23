@@ -24,6 +24,7 @@
 
   <div class="at-main">
     <header class="at-topbar">
+      <button class="btn btn-soft btn-sm d-none d-lg-inline-flex sidebar-toggle" type="button" data-sidebar-toggle aria-label="Hide sidebar" aria-pressed="false" title="Toggle sidebar"><i class="bi bi-layout-sidebar-inset"></i></button>
       <button class="btn btn-soft btn-sm d-lg-none" data-bs-toggle="offcanvas" data-bs-target="#menu" aria-label="Open menu"><i class="bi bi-list fs-5"></i></button>
       <div class="me-auto">
         <h1>@yield('title', 'Dashboard')</h1>
@@ -84,6 +85,7 @@
 
   <nav class="at-bottom" aria-label="Quick navigation">
     @if(auth()->user()->role === 'customer')<a href="{{ route('store.index') }}" class="{{ request()->routeIs('store.*') ? 'active' : '' }}"><i class="bi bi-shop"></i>Shop</a><a href="{{ route('cart.index') }}" class="{{ request()->routeIs('cart.*', 'checkout.*') ? 'active' : '' }}"><i class="bi bi-cart3"></i>Cart</a><a href="{{ route('orders.index') }}" class="{{ request()->routeIs('orders.*') ? 'active' : '' }}"><i class="bi bi-receipt"></i>Orders</a><a href="{{ route('support-chat.index') }}" class="{{ request()->routeIs('support-chat.*') ? 'active' : '' }}"><i class="bi bi-chat-dots"></i>Chat</a>
+    @elseif(auth()->user()->role === 'driver')<a href="{{ route('driver.dashboard') }}" class="{{ request()->routeIs('driver.dashboard') ? 'active' : '' }}"><i class="bi bi-speedometer2"></i>Driver</a><a href="{{ route('driver.scan') }}" class="{{ request()->routeIs('driver.scan*') ? 'active' : '' }}"><i class="bi bi-qr-code-scan"></i>Scan</a>
     @else
     @can('dashboard.view')<a href="{{ route('dashboard') }}" class="{{ request()->routeIs('dashboard') ? 'active' : '' }}"><i class="bi bi-grid-1x2"></i>Home</a>@endcan
     @can('monitoring.view')<a href="{{ route('monitoring.index') }}" class="{{ request()->routeIs('monitoring.*', 'readings.*') ? 'active' : '' }}"><i class="bi bi-droplet-half"></i>pH</a>

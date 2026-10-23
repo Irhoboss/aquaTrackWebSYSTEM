@@ -6,6 +6,7 @@
   <div class="col-lg-4 vstack gap-3">
     <div class="at-card card-body-pad">
       <div class="d-flex justify-content-between"><span class="pill pill-{{ $container->status_class }}">{{ $container->status_label }}</span><span class="pill pill-muted">{{ ucfirst($container->condition) }}</span></div>
+      <div class="container-qr-wrap"><div class="container-qr" data-container-code="AQ|CONTAINER|{{ $container->code }}"></div><span>Driver scan label</span><button class="btn btn-soft btn-sm" type="button" onclick="window.print()"><i class="bi bi-printer me-1"></i>Print label</button></div>
       <dl class="row small mt-3 mb-0">
         <dt class="col-6">Capacity</dt><dd class="col-6">{{ $container->capacity_liters ? $container->capacity_liters.' L' : '—' }}</dd>
         <dt class="col-6">Acquired</dt><dd class="col-6">@d($container->date_acquired)</dd>
@@ -66,3 +67,4 @@
   </div>
 </div>
 @endsection
+@push('scripts')<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script><script>document.querySelectorAll('.container-qr').forEach(el=>{if(window.QRCode)new QRCode(el,{text:el.dataset.containerCode,width:132,height:132,colorDark:'#14323a',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M})});</script>@endpush

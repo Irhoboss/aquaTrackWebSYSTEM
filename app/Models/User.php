@@ -21,7 +21,11 @@ class User extends Authenticatable
         ];
     }
 
-    public const ROLES = ['owner' => 'Owner / Administrator', 'manager' => 'Manager', 'staff' => 'Staff / Employee', 'customer' => 'Customer'];
+    public const ROLES = [
+        'admin' => 'Administrator', 'owner' => 'Owner / Administrator',
+        'manager' => 'Manager', 'staff' => 'Staff / Employee',
+        'driver' => 'Delivery Driver', 'customer' => 'Customer',
+    ];
 
     public function inbox(): HasMany { return $this->hasMany(UserNotification::class); }
     public function auditLogs(): HasMany { return $this->hasMany(AuditLog::class); }

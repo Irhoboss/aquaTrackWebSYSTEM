@@ -49,6 +49,7 @@ class AuthController extends Controller
 
         $home = match ($user->role) {
             'customer' => route('store.index'),
+            'driver' => route('driver.dashboard'),
             'manager' => route('monitoring.index'),
             'staff' => route('inventory.index'),
             default => route('dashboard'),
