@@ -14,10 +14,10 @@ return [
             'inventory.view', 'inventory.manage', 'stock.move',
             'suppliers.manage',
             'containers.view', 'containers.manage', 'inspections.record',
-            'reports.view', 'audit.view', 'support.chat', 'orders.manage',
+            'reports.view', 'attendance.view', 'audit.view', 'support.chat', 'orders.manage',
         ],
         'staff' => [
-            'dashboard.view', 'alerts.view',
+            'dashboard.view', 'alerts.view', 'attendance.view',
             'inventory.view', 'stock.move',
             'containers.view', 'inspections.record', 'support.chat', 'orders.manage',
         ],

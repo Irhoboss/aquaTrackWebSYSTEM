@@ -53,6 +53,7 @@ Permissions live in **one file**: `config/permissions.php` (role → abilities).
 | Inventory view / manage / stock moves | yes | yes | view + stock moves | no |
 | Suppliers | yes | yes | no | no |
 | Containers view / manage / inspections | yes | yes | view + inspections | scan QR; toggle available/in use |
+| Staff attendance | report | report | own check-in/out + history | no |
 | Orders | full | manage | process status | scan QR; complete/retry delivery |
 | Reports | all | operational | no | no |
 | Audit log | yes | yes | no | no |
@@ -70,7 +71,8 @@ Permissions live in **one file**: `config/permissions.php` (role → abilities).
 * **Inventory**: quantity only changes through stock movements, each written to a ledger inside a DB transaction with row locking. Negative stock is refused unless the owner ticks the exception. Items with history are archived, not deleted.
 * **Containers**: inspections and maintenance are append-only history; retiring a container keeps everything.
 * **Users**: nobody can change their own role/status; the last active owner cannot be demoted or deactivated; temporary passwords are shown once and never logged.
-* **Audit log**: logins, failed logins, user/role changes, profile/password changes, inventory & stock, inspections, alerts, settings, devices. Passwords and tokens are never recorded.
+* **Attendance**: staff can record their time in and time out and view only their own history; managers and admins can filter staff attendance by date and download a CSV report.
+* **Audit log**: logins, failed logins, user/role changes, profile/password changes, attendance, inventory & stock, inspections, alerts, settings, devices. Passwords and tokens are never recorded.
 * **Time**: stored in UTC, displayed in Asia/Manila.
 
 ## 6. File map

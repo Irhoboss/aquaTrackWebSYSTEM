@@ -29,6 +29,7 @@ class User extends Authenticatable
 
     public function inbox(): HasMany { return $this->hasMany(UserNotification::class); }
     public function auditLogs(): HasMany { return $this->hasMany(AuditLog::class); }
+    public function attendanceRecords(): HasMany { return $this->hasMany(AttendanceRecord::class); }
 
     public function getRoleLabelAttribute(): string { return self::ROLES[$this->role] ?? $this->role; }
 

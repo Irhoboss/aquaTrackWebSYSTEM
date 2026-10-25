@@ -1,7 +1,7 @@
 <?php
 
 use App\Http\Controllers\{AlertController, AuditController, AuthController, ContainerController, DashboardController,
-    DriverController, InventoryController, MonitoringController, NotificationController, OrderManagementController, ProfileController, ReportController, StorefrontController, SupportChatController,
+    AttendanceController, DriverController, InventoryController, MonitoringController, NotificationController, OrderManagementController, ProfileController, ReportController, StorefrontController, SupportChatController,
     SettingController, StockController, SupplierController, UserController};
 use Illuminate\Support\Facades\Route;
 
@@ -138,6 +138,11 @@ Route::middleware(['auth', 'active'])->group(function () {
 
     // Reports & audit
     Route::middleware('can:reports.view')->get('/reports', [ReportController::class, 'index'])->name('reports.index');
+    Route::middleware('can:attendance.view')->group(function () {
+        Route::get('/attendance', [AttendanceController::class, 'index'])->name('attendance.index');
+        Route::post('/attendance/check-in', [AttendanceController::class, 'checkIn'])->name('attendance.check-in');
+        Route::post('/attendance/check-out', [AttendanceController::class, 'checkOut'])->name('attendance.check-out');
+    });
     Route::middleware('can:audit.view')->get('/audit', [AuditController::class, 'index'])->name('audit.index');
 
     // Owner only

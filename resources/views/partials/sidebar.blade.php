@@ -7,6 +7,7 @@
       ['alerts.index', 'bi-bell', 'Alerts', 'alerts.view', 'alerts.*'],
     ],
     'Operations' => [
+      ['attendance.index', 'bi-calendar-check', 'Attendance', 'attendance.view', 'attendance.*'],
       ['inventory.index', 'bi-box-seam', 'Inventory', 'inventory.view', 'inventory.index|inventory.show|inventory.create|inventory.edit'],
       ['inventory.movements', 'bi-arrow-left-right', 'Stock movements', 'inventory.view', 'inventory.movements'],
       ['suppliers.index', 'bi-truck', 'Suppliers', 'suppliers.manage', 'suppliers.*'],
