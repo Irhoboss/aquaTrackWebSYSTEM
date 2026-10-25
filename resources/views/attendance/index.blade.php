@@ -30,8 +30,6 @@
   </div>
 @endif
 
-<p class="text-muted small mb-3">Work schedule: 8:00 AM - 6:00 PM | Late from 8:15 AM | No time in from 9:00 AM (Absent) | Early out before 6:00 PM</p>
-
 <div class="at-card card-body-pad mb-3">
   <form class="row g-2 align-items-end" method="get">
     @unless($isStaff)
