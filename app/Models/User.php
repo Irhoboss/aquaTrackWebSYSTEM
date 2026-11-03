@@ -3,11 +3,14 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Support\Facades\Storage;
 
 class User extends Authenticatable
 {
+    use HasFactory;
+
     protected $fillable = ['name', 'username', 'email', 'phone', 'role', 'is_active', 'must_change_password', 'avatar', 'password'];
     protected $hidden = ['password', 'remember_token'];
 

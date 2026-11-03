@@ -46,11 +46,13 @@
 <div class="modal fade" id="catModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content at-card">
   <div class="modal-header border-0"><h5 class="modal-title">Categories</h5><button class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
   <div class="modal-body">
-    <form method="post" action="{{ route('categories.store') }}" class="d-flex gap-2 mb-3">@csrf<input name="name" class="form-control" placeholder="New category name" required maxlength="80"><button class="btn btn-primary">Add</button></form>
+    <form method="post" action="{{ route('categories.store') }}" class="category-add-form mb-3">@csrf<input name="name" class="form-control" placeholder="New category name" aria-label="New category name" required maxlength="80"><button class="btn btn-primary" type="submit"><i class="bi bi-plus-lg" aria-hidden="true"></i><span>Add category</span></button></form>
+    <div class="category-list">
     @foreach($categories as $c)
-      <div class="d-flex justify-content-between align-items-center py-2 border-bottom"><span>{{ $c->name }} <span class="text-muted small">({{ $c->items_count }})</span></span>
+      <div class="category-row"><span class="category-name">{{ $c->name }} <span class="text-muted small">({{ $c->items_count }})</span></span>
         <form method="post" action="{{ route('categories.destroy', $c) }}" data-confirm="Delete category “{{ $c->name }}”?">@csrf @method('DELETE')<button class="btn btn-sm text-danger" aria-label="Delete category"><i class="bi bi-trash"></i></button></form></div>
     @endforeach
+    </div>
   </div></div></div></div>
 @endcan
 @endsection

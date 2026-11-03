@@ -39,7 +39,11 @@
       <h2 class="h6 mb-3">Change password</h2>
       <form method="post" action="{{ route('profile.password') }}" class="row g-3">
         @csrf @method('PUT')
-        <div class="col-12"><label class="form-label">Current password</label><input type="password" name="current_password" class="form-control" autocomplete="current-password" required></div>
+        @unless($user->must_change_password)
+          <div class="col-12"><label class="form-label">Current password</label><input type="password" name="current_password" class="form-control" autocomplete="current-password" required></div>
+        @else
+          <div class="col-12"><p class="text-muted small mb-0">Choose a new password to replace your temporary password.</p></div>
+        @endunless
         <div class="col-md-6"><label class="form-label">New password</label><input type="password" name="password" class="form-control" autocomplete="new-password" required></div>
         <div class="col-md-6"><label class="form-label">Confirm new password</label><input type="password" name="password_confirmation" class="form-control" autocomplete="new-password" required></div>
         <div class="col-12"><button class="btn btn-primary">Update password</button></div>

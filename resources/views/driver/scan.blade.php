@@ -14,6 +14,11 @@
       <div class="col-12 col-sm-8"><label class="form-label" for="scanCode">QR code value</label><input class="form-control" id="scanCode" name="code" value="{{ $code }}" placeholder="Order token or container code" required></div>
       <div class="col-12"><button class="btn btn-soft w-100" type="submit">Look up code</button></div>
     </form>
+
+    <div class="driver-scan-tips" aria-label="Scan guide">
+      <div class="driver-scan-tip"><i class="bi bi-box-seam"></i><span><strong>Delivery order</strong><small>Scan the QR on the order slip to open its delivery details.</small></span></div>
+      <div class="driver-scan-tip"><i class="bi bi-droplet-half"></i><span><strong>Water container</strong><small>Scan its label to mark it in use or returned.</small></span></div>
+    </div>
   </section>
 
   <section class="driver-scan-result">

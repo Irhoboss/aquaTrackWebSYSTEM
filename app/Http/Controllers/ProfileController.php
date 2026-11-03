@@ -55,10 +55,17 @@ class ProfileController extends Controller
 
     public function password(Request $request)
     {
-        $request->validate([
-            'current_password' => 'required|current_password',
+        $rules = [
             'password' => ['required', 'confirmed', 'different:current_password', Password::min((int) Setting::get('password_min_length'))->letters()->numbers()],
-        ]);
+        ];
+
+        // Temporary passwords must be changed on first login, so the user should not
+        // have to re-enter the temporary password to complete the forced change.
+        if (!$request->user()->must_change_password) {
+            $rules['current_password'] = 'required|current_password';
+        }
+
+        $request->validate($rules);
         $request->user()->update(['password' => $request->password, 'must_change_password' => false]);
         Audit::log('password.changed', $request->user());
         return back()->with('success', 'Password changed.');

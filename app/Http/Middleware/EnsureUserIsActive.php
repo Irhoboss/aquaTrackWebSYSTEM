@@ -22,7 +22,8 @@ class EnsureUserIsActive
         // Forced password change (temporary / reset passwords)
         if ($user && $user->must_change_password
             && !$request->routeIs('profile.*', 'logout')) {
-            return redirect()->route('profile.show')->with('warning', 'Please change your temporary password before continuing.');
+            return redirect()->to(route('profile.show').'#password')
+                ->with('warning', 'Please change your temporary password before continuing.');
         }
 
         return $next($request);

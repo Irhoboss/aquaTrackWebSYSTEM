@@ -58,11 +58,11 @@
 
 @if($can)
 <div class="row g-3 mb-3">
-  <div class="col-lg-8"><div class="at-card h-100"><div class="card-head"><h2>pH trend</h2><a class="small fw-bold" href="{{ route('monitoring.index') }}">Open monitor</a></div>
-    <div class="card-body-pad" style="height:290px"><canvas id="trend"></canvas></div></div></div>
+  <div class="col-12"><div class="at-card h-100"><div class="card-head"><h2>pH trend</h2><a class="small fw-bold" href="{{ route('monitoring.index') }}">Open monitor</a></div>
+    <div class="card-body-pad dashboard-trend-chart" style="height:290px"><canvas id="trend"></canvas><div class="dashboard-chart-empty" id="trendEmpty"><i class="bi bi-graph-up-arrow"></i><strong>No pH readings yet</strong><span>The trend will appear here after the sensor sends its first reading.</span></div></div></div></div>
 </div>
 <div class="row g-3 mb-3">
-  <div class="col-lg-4"><div class="at-card h-100"><div class="card-head"><h2>Reading quality today</h2><span class="small text-muted">{{ now()->format('M j') }}</span></div><div class="quality-chart"><canvas id="qualityMix"></canvas></div></div></div>
+  <div class="col-lg-4"><div class="at-card h-100"><div class="card-head"><h2>Reading quality today</h2><span class="small text-muted">{{ now()->format('M j') }}</span></div><div class="quality-chart"><canvas id="qualityMix"></canvas><div class="dashboard-chart-empty compact" id="qualityEmpty"><i class="bi bi-droplet"></i><strong>No readings today</strong><span>Quality breakdown will show after the first upload.</span></div></div></div></div>
   <div class="col-lg-8"><div class="at-card h-100"><div class="card-head"><h2>Recent pH readings</h2><a class="small fw-bold" href="{{ route('readings.index') }}">All readings</a></div>
     <div class="table-responsive"><table class="table"><thead><tr><th>Time</th><th>pH</th><th>Status</th></tr></thead><tbody id="recentBody">
       @forelse($stats['recent'] as $r)<tr><td class="small">{{ $r['at'] }}</td><td class="fw-bold">{{ $r['ph'] }}</td><td><span class="pill pill-{{ $r['class'] }}">{{ $r['status'] }}</span></td></tr>
@@ -131,6 +131,10 @@
     document.getElementById('ring').style.setProperty('--v', s.in_range_pct || 0);
     if (chart) AQ.setChart(chart, s.chart.labels, s.chart.values, s.ph_min, s.ph_max);
     if (mixChart) { mixChart.data.labels = s.status_mix.labels; mixChart.data.datasets[0].data = s.status_mix.values; mixChart.update(); }
+    const trendEmpty = document.getElementById('trendEmpty');
+    if (trendEmpty) trendEmpty.hidden = s.chart.values.length > 0;
+    const qualityEmpty = document.getElementById('qualityEmpty');
+    if (qualityEmpty) qualityEmpty.hidden = s.today_count > 0;
     const body = document.getElementById('recentBody');
     if (body && s.recent.length) body.innerHTML = s.recent.map(r => `<tr><td class="small">${r.at}</td><td class="fw-bold">${r.ph}</td><td><span class="pill pill-${r.class}">${r.status}</span></td></tr>`).join('');
   }

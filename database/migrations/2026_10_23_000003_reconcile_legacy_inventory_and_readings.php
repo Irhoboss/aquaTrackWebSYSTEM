@@ -51,6 +51,17 @@ return new class extends Migration {
     {
         $legacy = Schema::hasColumn('readings', 'ph') && Schema::hasColumn('readings', 'raw');
 
+        // Older installations have required ADC-era columns. New device uploads use
+        // ph_value/raw_voltage_mv instead, so retain old data while allowing those
+        // legacy fields to be empty for readings created by the current API.
+        if ($legacy) {
+            Schema::table('readings', function (Blueprint $table) {
+                if (Schema::hasColumn('readings', 'raw')) $table->unsignedSmallInteger('raw')->nullable()->change();
+                if (Schema::hasColumn('readings', 'voltage')) $table->float('voltage')->nullable()->change();
+                if (Schema::hasColumn('readings', 'ph')) $table->float('ph')->nullable()->change();
+            });
+        }
+
         if ($legacy && !Schema::hasColumn('readings', 'legacy_device_id')) {
             Schema::table('readings', fn (Blueprint $table) => $table->renameColumn('device_id', 'legacy_device_id'));
         }
@@ -77,8 +88,8 @@ return new class extends Migration {
 
             DB::statement("UPDATE readings SET ph_value = ph WHERE ph_value IS NULL");
             DB::statement("UPDATE readings SET raw_voltage_mv = ROUND(voltage * 1000) WHERE raw_voltage_mv IS NULL AND voltage IS NOT NULL");
-            DB::statement("UPDATE readings SET measured_at = COALESCE(created_at, NOW()) WHERE measured_at IS NULL");
-            DB::statement("UPDATE readings SET received_at = COALESCE(created_at, NOW()) WHERE received_at IS NULL");
+            DB::statement("UPDATE readings SET measured_at = COALESCE(created_at, CURRENT_TIMESTAMP) WHERE measured_at IS NULL");
+            DB::statement("UPDATE readings SET received_at = COALESCE(created_at, CURRENT_TIMESTAMP) WHERE received_at IS NULL");
             DB::statement("UPDATE readings SET status = CASE WHEN ph IS NULL OR ph < 0 OR ph > 14 THEN 'invalid' WHEN ph < 6.5 THEN 'low' WHEN ph > 8.5 THEN 'high' ELSE 'normal' END");
         }
 

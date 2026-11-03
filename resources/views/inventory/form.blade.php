@@ -1,7 +1,7 @@
 @extends('layouts.app')
 @section('title', $item->exists ? 'Edit item' : 'Add item')
 @section('content')
-<div class="at-card card-body-pad" style="max-width:860px">
+<div class="at-card card-body-pad inventory-form-card">
 <form method="post" action="{{ $item->exists ? route('inventory.update', $item) : route('inventory.store') }}" class="row g-3">
   @csrf @if($item->exists) @method('PUT') @endif
   <div class="col-md-4"><label class="form-label">SKU / Item ID</label><input name="sku" value="{{ old('sku', $item->sku) }}" class="form-control" required maxlength="50"></div>
