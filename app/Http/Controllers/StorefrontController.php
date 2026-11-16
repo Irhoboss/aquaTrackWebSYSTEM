@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\{Order, Product};
+use App\Support\Setting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -29,8 +30,10 @@ class StorefrontController extends Controller
 
     public function cart()
     {
-        [$lines, $total] = $this->cartLines();
-        return view('storefront.cart', compact('lines', 'total'));
+        [$lines, $subtotal] = $this->cartLines();
+        $deliveryFee = (float) Setting::get('delivery_fee', 0);
+        $total = $subtotal + $deliveryFee;
+        return view('storefront.cart', compact('lines', 'subtotal', 'deliveryFee', 'total'));
     }
 
     public function addToCart(Request $request, Product $product)
@@ -72,10 +75,12 @@ class StorefrontController extends Controller
 
     public function checkout(Request $request)
     {
-        [$lines, $total] = $this->cartLines();
+        [$lines, $subtotal] = $this->cartLines();
         if (!$lines) return redirect()->route('cart.index')->with('warning', 'Add an item to your cart before checkout.');
+        $deliveryFee = (float) Setting::get('delivery_fee', 0);
+        $total = $subtotal + $deliveryFee;
         $user = $request->user();
-        return view('storefront.checkout', compact('lines', 'total', 'user'));
+        return view('storefront.checkout', compact('lines', 'subtotal', 'deliveryFee', 'total', 'user'));
     }
 
     public function placeOrder(Request $request)
@@ -85,11 +90,20 @@ class StorefrontController extends Controller
             'phone' => ['required', 'string', 'max:30'],
             'delivery_address' => ['required', 'string', 'max:1000'],
             'note' => ['nullable', 'string', 'max:1000'],
+            'delivery_fee_quote' => ['required', 'numeric', 'min:0', 'max:999999'],
+            'pricing_acknowledged' => 'accepted',
         ]);
+        $deliveryFee = (float) Setting::get('delivery_fee', 0);
+        if (round((float) $data['delivery_fee_quote'], 2) !== round($deliveryFee, 2)) {
+            throw ValidationException::withMessages([
+                'pricing_acknowledged' => 'The delivery fee changed. Review the current total and place the order again.',
+            ]);
+        }
+        unset($data['delivery_fee_quote'], $data['pricing_acknowledged']);
         $cart = $request->session()->get('aq_cart', []);
         if (!$cart) return redirect()->route('cart.index')->with('warning', 'Add an item to your cart before checkout.');
 
-        $order = DB::transaction(function () use ($cart, $data, $request) {
+        $order = DB::transaction(function () use ($cart, $data, $request, $deliveryFee) {
             $products = Product::whereIn('id', array_keys($cart))->lockForUpdate()->get()->keyBy('id');
             $total = 0;
             foreach ($cart as $id => $quantity) {
@@ -105,7 +119,8 @@ class StorefrontController extends Controller
                 'order_number' => 'AT-'.now()->format('ymd').'-'.Str::upper(Str::random(7)),
                 'delivery_token' => Str::random(48),
                 'status' => 'pending',
-                'total' => $total,
+                'delivery_fee' => $deliveryFee,
+                'total' => $total + $deliveryFee,
                 ...$data,
             ]);
 

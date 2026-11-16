@@ -35,6 +35,10 @@ class AppServiceProvider extends ServiceProvider
             return Limit::perMinute(30)->by($device?->id ?: $request->ip());
         });
 
+        RateLimiter::for('account-registration', fn (Request $request) => Limit::perMinute(5)->by($request->ip()));
+        RateLimiter::for('order-placement', fn (Request $request) => Limit::perMinute(5)->by($request->user()?->id ?: $request->ip()));
+        RateLimiter::for('account-deletion', fn (Request $request) => Limit::perHour(2)->by($request->user()?->id ?: $request->ip()));
+
         // @dt($utcDateTime)  -> Philippine local time;  @d($dateColumn) -> plain date
         Blade::directive('dt', fn ($e) => "<?php echo e(\\App\\Support\\Fmt::dt($e)); ?>");
         Blade::directive('d', fn ($e) => "<?php echo e(\\App\\Support\\Fmt::d($e)); ?>");

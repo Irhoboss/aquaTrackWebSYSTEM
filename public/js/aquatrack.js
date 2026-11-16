@@ -1,6 +1,70 @@
 /* AquaTrack helpers */
 (function () {
   const root = document.documentElement;
+  const authTabs = document.querySelectorAll('[data-auth-tab]');
+  const authPanels = document.querySelectorAll('[data-auth-panel]');
+  const authPanelContainer = document.querySelector('[data-auth-panel-container]');
+  const setAuthMode = (mode, animate) => {
+    authTabs.forEach(tab => {
+      const active = tab.dataset.authTab === mode;
+      tab.setAttribute('aria-selected', String(active));
+      if (active) tab.setAttribute('aria-current', 'page');
+      else tab.removeAttribute('aria-current');
+    });
+    authPanels.forEach(panel => {
+      const active = panel.dataset.authPanel === mode;
+      panel.hidden = !active;
+      panel.classList.remove('auth-panel-enter');
+      if (active && animate) {
+        void panel.offsetWidth;
+        panel.classList.add('auth-panel-enter');
+      }
+    });
+    document.querySelectorAll('[data-auth-heading]').forEach(heading => {
+      heading.hidden = heading.dataset.authHeading !== mode;
+    });
+    authPanelContainer?.classList.toggle('login-panel-register', mode === 'register');
+    document.title = `${mode === 'register' ? 'Register' : 'Sign in'} · AquaTrack`;
+  };
+  if (authTabs.length && authPanels.length) {
+    authTabs.forEach(tab => tab.addEventListener('click', event => {
+      event.preventDefault();
+      const mode = tab.dataset.authTab;
+      setAuthMode(mode, true);
+      if (window.location.pathname !== new URL(tab.href).pathname) {
+        window.history.pushState({ authMode: mode }, '', tab.href);
+      }
+    }));
+    window.addEventListener('popstate', () => {
+      setAuthMode(window.location.pathname.replace(/\/+$/, '').endsWith('/register') ? 'register' : 'login', true);
+    });
+    setAuthMode(window.location.pathname.replace(/\/+$/, '').endsWith('/register') ? 'register' : 'login', false);
+  }
+
+  const cookieNotice = document.querySelector('[data-cookie-notice]');
+  const cookieChoiceKey = 'aq-essential-cookie-notice-v1';
+  document.addEventListener('click', event => {
+    if (event.target instanceof Element && event.target.closest('[data-print]')) window.print();
+  });
+  const showCookieNotice = () => {
+    if (cookieNotice) cookieNotice.hidden = false;
+  };
+  const dismissCookieNotice = () => {
+    try { localStorage.setItem(cookieChoiceKey, 'seen'); } catch (e) { }
+    if (cookieNotice) cookieNotice.hidden = true;
+  };
+  try {
+    if (cookieNotice && localStorage.getItem(cookieChoiceKey) !== 'seen') showCookieNotice();
+  } catch (e) {
+    showCookieNotice();
+  }
+  document.querySelectorAll('[data-cookie-dismiss]').forEach(button => button.addEventListener('click', dismissCookieNotice));
+  document.querySelectorAll('[data-cookie-reopen]').forEach(button => button.addEventListener('click', () => {
+    try { localStorage.removeItem(cookieChoiceKey); } catch (e) { }
+    showCookieNotice();
+    cookieNotice?.querySelector('[data-cookie-dismiss]')?.focus();
+  }));
+
   function setTheme(theme) {
     root.dataset.theme = theme;
     try { localStorage.setItem('aq-theme', theme); } catch (e) { }
@@ -20,20 +84,21 @@
 
   const sidebarButtons = document.querySelectorAll('[data-sidebar-toggle]');
   const syncSidebarButton = () => sidebarButtons.forEach(button => {
-    const hidden = document.body.classList.contains('sidebar-off');
-    button.setAttribute('aria-pressed', String(hidden));
-    button.setAttribute('aria-label', hidden ? 'Show sidebar' : 'Hide sidebar');
-    button.title = hidden ? 'Show sidebar' : 'Hide sidebar';
+    const collapsed = document.body.classList.contains('sidebar-collapsed');
+    button.setAttribute('aria-pressed', String(collapsed));
+    button.setAttribute('aria-label', collapsed ? 'Expand sidebar' : 'Collapse sidebar');
+    button.title = collapsed ? 'Expand sidebar' : 'Collapse sidebar';
     const icon = button.querySelector('i');
-    if (icon) icon.className = `bi ${hidden ? 'bi-layout-sidebar' : 'bi-layout-sidebar-inset'}`;
+    if (icon) icon.className = `bi ${collapsed ? 'bi-layout-sidebar' : 'bi-layout-sidebar-inset'}`;
   });
   try {
-    if (localStorage.getItem('aq-sidebar') === 'off') document.body.classList.add('sidebar-off');
+    const sidebarState = localStorage.getItem('aq-sidebar');
+    if (sidebarState === 'collapsed' || sidebarState === 'off') document.body.classList.add('sidebar-collapsed');
   } catch (e) { }
   syncSidebarButton();
   sidebarButtons.forEach(button => button.addEventListener('click', () => {
-    document.body.classList.toggle('sidebar-off');
-    try { localStorage.setItem('aq-sidebar', document.body.classList.contains('sidebar-off') ? 'off' : 'on'); } catch (e) { }
+    document.body.classList.toggle('sidebar-collapsed');
+    try { localStorage.setItem('aq-sidebar', document.body.classList.contains('sidebar-collapsed') ? 'collapsed' : 'expanded'); } catch (e) { }
     syncSidebarButton();
   }));
 
@@ -51,13 +116,19 @@
     toggle.className = 'password-toggle';
     toggle.setAttribute('aria-label', 'Show password');
     toggle.setAttribute('aria-pressed', 'false');
-    toggle.innerHTML = '<i class="bi bi-eye" aria-hidden="true"></i>';
+    const setToggleIcon = name => {
+      const icon = document.createElement('i');
+      icon.className = `bi ${name}`;
+      icon.setAttribute('aria-hidden', 'true');
+      toggle.replaceChildren(icon);
+    };
+    setToggleIcon('bi-eye');
     toggle.addEventListener('click', () => {
       const reveal = input.type === 'password';
       input.type = reveal ? 'text' : 'password';
       toggle.setAttribute('aria-label', reveal ? 'Hide password' : 'Show password');
       toggle.setAttribute('aria-pressed', String(reveal));
-      toggle.innerHTML = `<i class="bi ${reveal ? 'bi-eye-slash' : 'bi-eye'}" aria-hidden="true"></i>`;
+      setToggleIcon(reveal ? 'bi-eye-slash' : 'bi-eye');
       input.focus({ preventScroll: true });
     });
     field.appendChild(toggle);
@@ -68,6 +139,23 @@
   let confirmSubmitter = null;
   document.addEventListener('submit', function (e) {
     const f = e.target;
+    if (f.dataset.logoutConfirm && f.dataset.logoutConfirmed !== '1') {
+      e.preventDefault();
+      confirmForm = f;
+      confirmSubmitter = e.submitter;
+      const modalEl = document.getElementById('aqLogoutConfirmModal');
+      if (modalEl && window.bootstrap?.Modal) {
+        bootstrap.Modal.getOrCreateInstance(modalEl).show();
+      } else if (window.confirm('Sign out of AquaTrack?')) {
+        f.dataset.logoutConfirmed = '1';
+        f.requestSubmit(e.submitter || undefined);
+      } else {
+        confirmForm = null;
+        confirmSubmitter = null;
+      }
+      return;
+    }
+    if (f.dataset.logoutConfirmed === '1') delete f.dataset.logoutConfirmed;
     if (f.dataset.confirm && f.dataset.confirmed !== '1') {
       e.preventDefault();
       confirmForm = f;
@@ -110,6 +198,29 @@
     const proceed = document.getElementById('aqConfirmProceed');
     if (proceed) proceed.textContent = 'Continue';
   });
+  document.getElementById('aqLogoutProceed')?.addEventListener('click', () => {
+    const form = confirmForm;
+    const submitter = confirmSubmitter;
+    confirmForm = null;
+    confirmSubmitter = null;
+    if (!form) return;
+    form.dataset.logoutConfirmed = '1';
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('aqLogoutConfirmModal')).hide();
+    form.requestSubmit(submitter || undefined);
+  });
+  document.getElementById('aqLogoutConfirmModal')?.addEventListener('hidden.bs.modal', () => {
+    confirmForm = null;
+    confirmSubmitter = null;
+  });
+
+  const signedOutModal = document.getElementById('aqSignedOutModal');
+  if (signedOutModal && window.bootstrap?.Modal) {
+    bootstrap.Modal.getOrCreateInstance(signedOutModal).show();
+  }
+  const signedInModal = document.getElementById('aqSignedInModal');
+  if (signedInModal && window.bootstrap?.Modal) {
+    bootstrap.Modal.getOrCreateInstance(signedInModal).show();
+  }
 
   // Copy-to-clipboard buttons: <button data-copy="#selector">
   document.addEventListener('click', function (e) {

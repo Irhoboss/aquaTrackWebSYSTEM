@@ -11,7 +11,7 @@
 </div>
 <div class="at-card"><div class="table-responsive"><table class="table table-hover align-middle"><thead><tr><th>User</th><th>Role</th><th>Status</th><th>Last sign-in</th><th></th></tr></thead><tbody>
 @foreach($users as $u)
-  <tr><td><div class="d-flex align-items-center gap-2">@if($u->avatar_url)<img class="at-avatar" src="{{ $u->avatar_url }}" alt="">@else<span class="at-avatar">{{ $u->initials }}</span>@endif<div><div class="fw-bold">{{ $u->name }}</div><div class="small text-muted">{{ '@'.$u->username }} · {{ $u->email }}</div></div></div></td>
+  <tr><td><div class="d-flex align-items-center gap-2">@if($u->avatar_url)<img class="at-avatar" src="{{ $u->avatar_url }}" alt="Profile picture of {{ $u->name }}">@else<span class="at-avatar">{{ $u->initials }}</span>@endif<div><div class="fw-bold">{{ $u->name }}</div><div class="small text-muted">{{ '@'.$u->username }} · {{ $u->email }}</div></div></div></td>
     <td>{{ $u->role_label }}</td><td><span class="pill pill-{{ $u->is_active ? 'ok' : 'muted' }}">{{ $u->is_active ? 'Active' : 'Inactive' }}</span></td>
     <td class="small">{{ $u->last_login_at ? \App\Support\Fmt::dt($u->last_login_at) : '—' }}</td>
     <td class="text-end"><a class="btn-circle" href="{{ route('users.show', $u) }}" aria-label="Open {{ $u->name }}"><i class="bi bi-arrow-right"></i></a></td></tr>

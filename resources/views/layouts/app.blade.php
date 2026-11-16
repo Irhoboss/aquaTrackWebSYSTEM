@@ -6,15 +6,14 @@
   <meta name="csrf-token" content="{{ csrf_token() }}">
   <title>@yield('title', 'Dashboard') · AquaTrack</title>
   @if($brand['favicon'])<link rel="icon" href="{{ $brand['favicon'] }}">@endif
-  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
   <link href="{{ asset('css/aquatrack.css') }}?v={{ filemtime(public_path('css/aquatrack.css')) }}" rel="stylesheet">
-  <script>(function(){try{var t=localStorage.getItem('aq-theme');if(!t)t=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';document.documentElement.dataset.theme=t}catch(e){}})()</script>
+  <script nonce="{{ request()->attributes->get('csp_nonce') }}">(function(){try{var t=localStorage.getItem('aq-theme');if(!t)t=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';document.documentElement.dataset.theme=t}catch(e){}})()</script>
   @stack('head')
 </head>
 <body>
+  <a class="skip-link" href="#main-content">Skip to main content</a>
   <aside class="at-sidebar" aria-label="Main navigation">@include('partials.sidebar')</aside>
 
   <div class="offcanvas offcanvas-start" tabindex="-1" id="menu" style="width: 290px">
@@ -22,7 +21,7 @@
     <div class="offcanvas-body">@include('partials.sidebar', ['mobile' => true])</div>
   </div>
 
-  <div class="at-main">
+  <div class="at-main" id="main-content" tabindex="-1">
     <header class="at-topbar">
       <button class="btn btn-soft btn-sm d-none d-lg-inline-flex sidebar-toggle" type="button" data-sidebar-toggle aria-label="Hide sidebar" aria-pressed="false" title="Toggle sidebar"><i class="bi bi-layout-sidebar-inset"></i></button>
       <button class="btn btn-soft btn-sm d-lg-none" data-bs-toggle="offcanvas" data-bs-target="#menu" aria-label="Open menu"><i class="bi bi-list fs-5"></i></button>
@@ -65,14 +64,14 @@
 
       <div class="dropdown">
         <button class="btn p-0 border-0" data-bs-toggle="dropdown" aria-label="Account menu">
-          @if(auth()->user()->avatar_url)<img class="at-avatar" src="{{ auth()->user()->avatar_url }}" alt="">@else<span class="at-avatar">{{ auth()->user()->initials }}</span>@endif
+          @if(auth()->user()->avatar_url)<img class="at-avatar" src="{{ auth()->user()->avatar_url }}" alt="Profile picture of {{ auth()->user()->name }}">@else<span class="at-avatar">{{ auth()->user()->initials }}</span>@endif
         </button>
         <div class="dropdown-menu dropdown-menu-end" style="min-width: 220px">
           <div class="px-3 py-2"><div class="fw-bold">{{ auth()->user()->name }}</div><div class="small text-muted">{{ auth()->user()->role_label }}</div></div>
           <a class="dropdown-item" href="{{ route('profile.show') }}"><i class="bi bi-person me-2"></i>My profile</a>
           <a class="dropdown-item" href="{{ route('profile.show') }}#password"><i class="bi bi-key me-2"></i>Change password</a>
           <hr class="my-1">
-          <form method="post" action="{{ route('logout') }}">@csrf<button class="dropdown-item text-danger"><i class="bi bi-box-arrow-right me-2"></i>Sign out</button></form>
+          <form method="post" action="{{ route('logout') }}" data-logout-confirm="1">@csrf<button class="dropdown-item text-danger"><i class="bi bi-box-arrow-right me-2"></i>Sign out</button></form>
         </div>
       </div>
     </header>
@@ -80,7 +79,10 @@
     @include('partials.flash')
     @yield('content')
 
-    <footer class="text-center small text-muted mt-4 no-print">{{ $brand['name'] }} · AquaTrack. Sensor readings are a monitoring aid and do not certify water as potable.</footer>
+    <footer class="text-center small text-muted mt-4 no-print">
+      {{ $brand['name'] }} · AquaTrack. Sensor readings do not certify water as potable.
+      <nav class="mt-2" aria-label="Legal links"><a href="{{ route('legal.privacy') }}">Privacy</a> · <a href="{{ route('legal.terms') }}">Terms</a> · <a href="{{ route('legal.refunds') }}">Refunds</a> · <a href="{{ route('legal.cookies') }}">Cookies</a> · <button type="button" class="footer-link" data-cookie-reopen>Cookie settings</button></nav>
+    </footer>
   </div>
 
   <nav class="at-bottom" aria-label="Quick navigation">
@@ -104,8 +106,38 @@
     </div></div>
   </div>
 
+  @if(session('signed_in'))
+    <div class="modal fade aq-session-modal" id="aqSignedInModal" tabindex="-1" aria-labelledby="aqSignedInTitle" aria-describedby="aqSignedInMessage" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+      <div class="modal-dialog modal-dialog-centered"><div class="modal-content">
+        <div class="modal-body">
+          <div class="aq-logout-icon aq-logout-success" aria-hidden="true"><svg class="aq-session-mark aq-session-mark-check" viewBox="0 0 24 24" focusable="false"><path d="m5 12 4.5 4.5L19 7"></path></svg></div>
+          <h2 class="aq-logout-title" id="aqSignedInTitle">Welcome back!</h2>
+          <p class="aq-logout-message" id="aqSignedInMessage">You have successfully signed in to AquaTrack.</p>
+          <div class="aq-logout-actions">
+            <button type="button" class="btn btn-primary aq-logout-button" data-bs-dismiss="modal">Continue</button>
+          </div>
+        </div>
+      </div></div>
+    </div>
+  @endif
+
+  <div class="modal fade aq-logout-modal" id="aqLogoutConfirmModal" tabindex="-1" aria-labelledby="aqLogoutConfirmTitle" aria-describedby="aqLogoutConfirmMessage" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered"><div class="modal-content">
+      <div class="modal-body">
+        <div class="aq-logout-icon aq-logout-warning" aria-hidden="true"><svg class="aq-session-mark aq-session-mark-alert" viewBox="0 0 24 24" focusable="false"><path d="M12 5v9"></path><circle cx="12" cy="18" r="1"></circle></svg></div>
+        <h2 class="aq-logout-title" id="aqLogoutConfirmTitle">Sign out of AquaTrack?</h2>
+        <p class="aq-logout-message" id="aqLogoutConfirmMessage">You can sign back in at any time.</p>
+        <div class="aq-logout-actions">
+          <button type="button" class="btn aq-logout-cancel" data-bs-dismiss="modal">Not now</button>
+          <button type="button" class="btn btn-primary aq-logout-button" id="aqLogoutProceed">Sign out</button>
+        </div>
+      </div>
+    </div></div>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+  @include('partials.cookie-consent')
   <script src="{{ asset('js/aquatrack.js') }}?v={{ filemtime(public_path('js/aquatrack.js')) }}"></script>
   @stack('scripts')
 </body>

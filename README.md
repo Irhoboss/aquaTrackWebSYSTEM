@@ -26,7 +26,10 @@ cd aquatrack
 #    DB_USERNAME=root
 #    DB_PASSWORD=
 #    APP_TIMEZONE stays UTC (storage). Display time is Asia/Manila: APP_DISPLAY_TZ=Asia/Manila
-#    MAIL_MAILER=log        (password-reset links appear in storage/logs/laravel.log)
+#    MAIL_MAILER=log        (development verification codes appear in storage/logs/laravel.log)
+#    GOOGLE_CLIENT_ID=      (optional; configure Google OAuth to enable Google sign-in)
+#    GOOGLE_CLIENT_SECRET=
+#    GOOGLE_REDIRECT_URI="${APP_URL}/auth/google/callback"
 #    AQUATRACK_ADMIN_PASSWORD=admin123        (optional: choose a different initial password)
 
 php artisan key:generate
@@ -37,6 +40,8 @@ php artisan schedule:work               # second terminal: offline-sensor / stoc
 ```
 `migrate --seed` creates the owner account and prints the **ESP32 device token once** — copy it.
 Delete Laravel's sample tests in `tests/` (they do not know about the login redirect).
+
+Email verification codes expire after 10 minutes and are rate-limited. Configure a real SMTP/mail provider before using registration and password recovery outside development. For Google sign-in, create a Google OAuth web client and add the exact callback generated from `APP_URL` (for XAMPP at `http://localhost/aquatrack/public`, this is `http://localhost/aquatrack/public/auth/google/callback`) as an authorized redirect URI; use the client ID and secret from that same client in `.env` (never commit them). Google sign-in is for existing active AquaTrack accounts with a matching verified email; new accounts still use email OTP and admin approval.
 
 Optional demo data (sample users, items, containers, 24 h of readings): `php artisan db:seed --class=DemoSeeder`.
 
@@ -86,4 +91,12 @@ firmware/aquatrack_esp32.ino docs/HARDWARE.md docs/API.md
 ```
 
 ## 7. Before real use
-Change all temporary passwords, set `APP_ENV=production`, `APP_DEBUG=false`, use HTTPS between the ESP32 and server, configure real mail for password resets, back up the database, and confirm the pH limits and testing obligations with the proper regulator. Sensor readings do not certify water as potable.
+Change all temporary passwords, set `APP_ENV=production`, `APP_DEBUG=false`, enable HTTPS with a valid certificate, set `FORCE_HTTPS=true` and `SESSION_SECURE_COOKIE=true` only when the server/proxy correctly reports HTTPS, configure real mail for password resets, back up the database, and confirm the pH limits and testing obligations with the proper regulator. Sensor readings do not certify water as potable.
+
+## 8. Privacy and checkout setup
+* Before accepting public accounts or orders, enter the real legal operator name, business address, privacy contact email, station contact, and delivery fee in **Settings**. Policy pages explicitly show when these details are missing.
+* Public privacy, terms, refund, and cookie pages use conservative draft wording, not jurisdiction-specific legal advice. Review them for the actual country and business before launch.
+* Registration requires Terms, Privacy, and age/guardian acknowledgements. The app does not collect date of birth. Account deletion is available to customers; order totals/items remain while customer identity/contact details are anonymized.
+* No marketing email subscription exists, so verification emails are transactional and are not given a marketing unsubscribe link. No analytics or advertising cookies are enabled. Google Fonts and CDN-hosted UI libraries still make third-party requests; the cookie policy discloses this.
+* The delivery fee is configured by the station, shown before submission, and stored with each order. No payment gateway or billable cloud API is configured, so a provider spend cap cannot be set here; API devices are rate-limited.
+* `.env` and other environment files are ignored by Git; commit only `.env.example`. The CORS allowlist is empty by default. If a browser API client needs cross-origin access, list only its trusted origins in `CORS_ALLOWED_ORIGINS`.

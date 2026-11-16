@@ -101,8 +101,23 @@
         const d = document.createElement('div');
         d.className = 'row';
         d.dataset.search = `${r.time} ${r.status} ${r.ph}`;
-        d.innerHTML = `<span class="t">${r.time}</span><b class="p">${f(r.ph)}</b><span class="v">${f(r.voltage, 3)} V</span>` +
-          `<span class="r">ADC ${Number(r.raw)}</span><span class="s badge ${r.status.toLowerCase()}">${r.status[0] + r.status.slice(1).toLowerCase()}</span>`;
+        const time = document.createElement('span');
+        time.className = 't';
+        time.textContent = String(r.time ?? '');
+        const ph = document.createElement('b');
+        ph.className = 'p';
+        ph.textContent = f(r.ph);
+        const voltage = document.createElement('span');
+        voltage.className = 'v';
+        voltage.textContent = `${f(r.voltage, 3)} V`;
+        const raw = document.createElement('span');
+        raw.className = 'r';
+        raw.textContent = `ADC ${Number(r.raw)}`;
+        const status = document.createElement('span');
+        const tone = ['ACIDIC', 'NORMAL', 'ALKALINE'].includes(r.status) ? r.status.toLowerCase() : 'unknown';
+        status.className = `s badge ${tone}`;
+        status.textContent = typeof r.status === 'string' ? r.status[0] + r.status.slice(1).toLowerCase() : 'Unknown';
+        d.append(time, ph, voltage, raw, status);
         return d;
       }));
       applySearch();

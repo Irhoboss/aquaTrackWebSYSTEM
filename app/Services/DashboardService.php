@@ -6,6 +6,7 @@ use App\Models\Alert;
 use App\Models\Container;
 use App\Models\Device;
 use App\Models\InventoryItem;
+use App\Models\Order;
 use App\Models\Reading;
 use App\Models\User;
 use App\Support\Fmt;
@@ -37,6 +38,32 @@ class DashboardService
             'needs_inspection' => Container::where('status', '!=', 'retired')->whereNotNull('next_inspection_date')->whereDate('next_inspection_date', '<=', today())->count(),
             'due_replacement' => Container::where('status', '!=', 'retired')->whereNotNull('replacement_due_date')->whereDate('replacement_due_date', '<=', today())->count(),
         ];
+        if ($user->can('inventory.view')) {
+            $out['inventory_mix'] = [
+                'labels' => ['In stock', 'Low stock', 'Out of stock'],
+                'values' => [
+                    max(0, $out['total_items'] - $out['low_stock'] - $out['out_of_stock']),
+                    $out['low_stock'],
+                    $out['out_of_stock'],
+                ],
+            ];
+        }
+        if ($user->can('orders.manage')) {
+            $orderCounts = Order::query()->selectRaw('status, count(*) as total')->groupBy('status')->pluck('total', 'status');
+            $orderStatuses = [
+                'pending' => 'Pending',
+                'confirmed' => 'Confirmed',
+                'preparing' => 'Preparing',
+                'out_for_delivery' => 'Out for delivery',
+                'delivery_failed' => 'Delivery failed',
+                'delivered' => 'Delivered',
+                'cancelled' => 'Cancelled',
+            ];
+            $out['order_mix'] = [
+                'labels' => array_values($orderStatuses),
+                'values' => array_map(fn ($status) => (int) ($orderCounts[$status] ?? 0), array_keys($orderStatuses)),
+            ];
+        }
         if (!$canMonitor) return $out;
 
         $latest = Reading::with('device')->latest('measured_at')->first();

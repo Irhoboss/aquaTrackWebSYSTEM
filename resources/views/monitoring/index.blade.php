@@ -42,12 +42,19 @@
 @endsection
 
 @push('scripts')
-<script>
+<script nonce="{{ request()->attributes->get('csp_nonce') }}">
 (function () {
   let range = '24h';
   const chart = AQ.lineChart(document.getElementById('chart'));
   const $ = id => document.getElementById(id);
   const f = v => v === null || v === undefined ? '—' : Number(v).toFixed(2);
+  const statusBadge = (value, tone) => {
+    const badge = document.createElement('span');
+    const allowed = ['ok', 'warn', 'bad', 'info', 'muted'];
+    badge.className = 'pill pill-' + (allowed.includes(tone) ? tone : 'muted');
+    badge.textContent = String(value ?? 'Unknown');
+    return badge;
+  };
 
   function render(d) {
     const l = d.latest;
@@ -58,11 +65,64 @@
     if (l && l.ph !== '—') $('mark').style.left = Math.max(0, Math.min(100, parseFloat(l.ph) / 14 * 100)) + '%';
     $('sMin').textContent = f(d.stats.min); $('sAvg').textContent = f(d.stats.avg); $('sMax').textContent = f(d.stats.max); $('sCnt').textContent = d.stats.count;
     AQ.setChart(chart, d.chart.labels, d.chart.values, d.ph_min, d.ph_max);
-    $('devices').innerHTML = d.devices.length ? d.devices.map(v => `<div class="d-flex justify-content-between align-items-center py-2 border-bottom" style="border-color:var(--at-line)!important">
-        <div><div class="fw-bold">${v.name}</div><div class="small text-muted">${v.device_id}</div></div>
-        <div class="text-end small"><span class="dot ${v.online ? 'on' : 'off'}"></span>${v.active ? (v.online ? 'Online' : 'Offline') : 'Revoked'}<div class="text-muted">${v.last_seen}</div></div></div>`).join('') : '<div class="text-muted small">No devices registered.</div>';
-    $('recent').innerHTML = d.recent.length ? d.recent.map(r => `<tr><td class="small">${r.at}</td><td class="small">${r.device}</td><td class="fw-bold">${r.ph}</td><td><span class="pill pill-${r.class}">${r.status}</span></td></tr>`).join('')
-      : '<tr><td colspan="4" class="text-center text-muted py-4">No readings yet.</td></tr>';
+    const deviceList = $('devices');
+    if (d.devices.length) {
+      deviceList.replaceChildren(...d.devices.map(v => {
+        const row = document.createElement('div');
+        row.className = 'd-flex justify-content-between align-items-center py-2 border-bottom';
+        row.style.borderColor = 'var(--at-line)';
+        const info = document.createElement('div');
+        const name = document.createElement('div');
+        name.className = 'fw-bold';
+        name.textContent = String(v.name ?? 'Unnamed device');
+        const id = document.createElement('div');
+        id.className = 'small text-muted';
+        id.textContent = String(v.device_id ?? '');
+        info.append(name, id);
+        const status = document.createElement('div');
+        status.className = 'text-end small';
+        const dot = document.createElement('span');
+        dot.className = 'dot ' + (v.online ? 'on' : 'off');
+        const state = document.createElement('span');
+        state.textContent = v.active ? (v.online ? 'Online' : 'Offline') : 'Revoked';
+        const lastSeen = document.createElement('div');
+        lastSeen.className = 'text-muted';
+        lastSeen.textContent = String(v.last_seen ?? 'Never');
+        status.append(dot, state, lastSeen);
+        row.append(info, status);
+        return row;
+      }));
+    } else {
+      const empty = document.createElement('div');
+      empty.className = 'text-muted small';
+      empty.textContent = 'No devices registered.';
+      deviceList.replaceChildren(empty);
+    }
+
+    const recent = $('recent');
+    if (d.recent.length) {
+      recent.replaceChildren(...d.recent.map(r => {
+        const row = document.createElement('tr');
+        for (const [value, className] of [[r.at, 'small'], [r.device, 'small'], [r.ph, 'fw-bold']]) {
+          const cell = document.createElement('td');
+          cell.className = className;
+          cell.textContent = String(value ?? '');
+          row.append(cell);
+        }
+        const statusCell = document.createElement('td');
+        statusCell.append(statusBadge(r.status, r.class));
+        row.append(statusCell);
+        return row;
+      }));
+    } else {
+      const row = document.createElement('tr');
+      const cell = document.createElement('td');
+      cell.colSpan = 4;
+      cell.className = 'text-center text-muted py-4';
+      cell.textContent = 'No readings yet.';
+      row.append(cell);
+      recent.replaceChildren(row);
+    }
   }
   document.querySelectorAll('#rangeSeg button').forEach(b => b.addEventListener('click', () => {
     document.querySelectorAll('#rangeSeg button').forEach(x => x.classList.remove('active')); b.classList.add('active'); range = b.dataset.r;

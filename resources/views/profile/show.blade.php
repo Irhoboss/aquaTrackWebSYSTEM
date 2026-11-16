@@ -37,13 +37,26 @@
 
     <div class="at-card card-body-pad" id="password">
       <h2 class="h6 mb-3">Change password</h2>
-      <form method="post" action="{{ route('profile.password') }}" class="row g-3">
-        @csrf @method('PUT')
-        <div class="col-12"><label class="form-label">Current password</label><input type="password" name="current_password" class="form-control" autocomplete="current-password" required></div>
-        <div class="col-md-6"><label class="form-label">New password</label><input type="password" name="password" class="form-control" autocomplete="new-password" required></div>
-        <div class="col-md-6"><label class="form-label">Confirm new password</label><input type="password" name="password_confirmation" class="form-control" autocomplete="new-password" required></div>
-        <div class="col-12"><button class="btn btn-primary">Update password</button></div>
-      </form>
+      @if($passwordOtpPending)
+        <p class="small text-muted">Enter the verification code sent to {{ $user->email }} to confirm your password change.</p>
+        <form method="post" action="{{ route('profile.password.otp.verify') }}" class="row g-3">
+          @csrf
+          <div class="col-12"><label class="form-label" for="password_change_code">Verification code</label><input id="password_change_code" name="code" value="{{ old('code') }}" class="form-control" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" required></div>
+          <div class="col-12"><button class="btn btn-primary">Verify and update password</button></div>
+        </form>
+        <form method="post" action="{{ route('profile.password.otp.resend') }}" class="mt-2">
+          @csrf
+          <button class="btn btn-link btn-sm px-0">Send a new code</button>
+        </form>
+      @else
+        <form method="post" action="{{ route('profile.password') }}" class="row g-3">
+          @csrf @method('PUT')
+          <div class="col-12"><label class="form-label">Current password</label><input type="password" name="current_password" class="form-control" autocomplete="current-password" required></div>
+          <div class="col-md-6"><label class="form-label">New password</label><input type="password" name="password" class="form-control" autocomplete="new-password" required></div>
+          <div class="col-md-6"><label class="form-label">Confirm new password</label><input type="password" name="password_confirmation" class="form-control" autocomplete="new-password" required></div>
+          <div class="col-12"><button class="btn btn-primary">Send verification code</button></div>
+        </form>
+      @endif
     </div>
 
     <div class="at-card">
@@ -53,12 +66,25 @@
       @empty @include('partials.empty', ['icon' => 'bi-journal', 'title' => 'No activity yet']) @endforelse
       <div class="p-3">{{ $activity->links() }}</div>
     </div>
+
+    @if($user->role === 'customer')
+      <section class="at-card card-body-pad border-danger">
+        <h2 class="h6 text-danger">Delete account</h2>
+        <p class="small text-muted">This permanently disables your account and removes your profile, contact details, feedback, and support messages. Order totals and items are retained with the customer identity and delivery details anonymized.</p>
+        <form method="post" action="{{ route('profile.account.destroy') }}" class="row g-3" data-confirm="Permanently delete your AquaTrack account and anonymize its order records?" data-confirm-label="Delete account">
+          @csrf @method('DELETE')
+          <div class="col-md-6"><label class="form-label" for="delete_account_password">Current password</label><input id="delete_account_password" type="password" name="current_password" class="form-control" autocomplete="current-password" required></div>
+          <div class="col-md-6"><label class="form-label" for="delete_account_confirmation">Type DELETE to confirm</label><input id="delete_account_confirmation" name="delete_confirmation" class="form-control" autocomplete="off" required></div>
+          <div class="col-12"><button class="btn btn-danger" type="submit">Delete my account</button></div>
+        </form>
+      </section>
+    @endif
   </div>
 </div>
 @endsection
 
 @push('scripts')
-<script>
+<script nonce="{{ request()->attributes->get('csp_nonce') }}">
 document.getElementById('avatar').addEventListener('change', function () {
   const f = this.files[0]; if (!f) return;
   if (f.size > 2 * 1024 * 1024) { alert('Image must be 2 MB or smaller.'); this.value = ''; return; }

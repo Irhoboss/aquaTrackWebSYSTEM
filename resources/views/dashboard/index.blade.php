@@ -71,6 +71,17 @@
 </div>
 @endif
 
+@if(auth()->user()->can('inventory.view') || auth()->user()->can('orders.manage'))
+<div class="row g-3 mb-3">
+  @can('inventory.view')
+    <div class="col-lg-6"><div class="at-card h-100"><div class="card-head"><h2>Inventory status</h2><a class="small fw-bold" href="{{ route('inventory.index') }}">View stock</a></div><div class="dashboard-chart-box"><canvas id="inventoryMix"></canvas></div></div></div>
+  @endcan
+  @can('orders.manage')
+    <div class="col-lg-6"><div class="at-card h-100"><div class="card-head"><h2>Orders by status</h2><a class="small fw-bold" href="{{ route('operations.orders.index') }}">Manage orders</a></div><div class="dashboard-chart-box"><canvas id="ordersMix"></canvas></div></div></div>
+  @endcan
+</div>
+@endif
+
 <div class="row g-3 mb-3">
   <div class="col-lg-6"><div class="at-card h-100"><div class="card-head"><h2>Recent alerts</h2><a class="small fw-bold" href="{{ route('alerts.index') }}">All</a></div>
     @forelse($alerts as $a)
@@ -108,7 +119,7 @@
 @endsection
 
 @push('scripts')
-<script>
+<script nonce="{{ request()->attributes->get('csp_nonce') }}">
 (function () {
   const stats = @json($stats);
   const set = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
@@ -117,9 +128,23 @@
   if (canvas) { chart = AQ.lineChart(canvas); AQ.setChart(chart, stats.chart.labels, stats.chart.values, stats.ph_min, stats.ph_max); }
   const mixCanvas = document.getElementById('qualityMix');
   const mixChart = mixCanvas ? new Chart(mixCanvas, { type: 'doughnut', data: { labels: stats.status_mix.labels, datasets: [{ data: stats.status_mix.values, backgroundColor: ['#2bc4b4','#d98a12','#d64545','#8b98a5'], borderWidth: 0, hoverOffset: 7 }] }, options: { responsive: true, maintainAspectRatio: false, cutout: '72%', animation: { duration: 700 }, plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, padding: 18 } } } } }) : null;
+  const inventoryCanvas = document.getElementById('inventoryMix');
+  const inventoryChart = inventoryCanvas ? new Chart(inventoryCanvas, { type: 'doughnut', data: { labels: stats.inventory_mix.labels, datasets: [{ data: stats.inventory_mix.values, backgroundColor: ['#2bc4b4','#d98a12','#d64545'], borderWidth: 0, hoverOffset: 8 }] }, options: { responsive: true, maintainAspectRatio: false, cutout: '68%', animation: { duration: 900, easing: 'easeOutQuart' }, plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, padding: 18 } } } } }) : null;
+  const ordersCanvas = document.getElementById('ordersMix');
+  const ordersChart = ordersCanvas ? new Chart(ordersCanvas, { type: 'bar', data: { labels: stats.order_mix.labels, datasets: [{ label: 'Orders', data: stats.order_mix.values, backgroundColor: ['#2bc4b4','#3b82c4','#8b98a5','#d98a12','#ef9d67','#0b6d64','#d64545'], borderRadius: 7, borderSkipped: false }] }, options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, animation: { duration: 900, easing: 'easeOutQuart' }, plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true, ticks: { precision: 0 }, grid: { color: 'rgba(20,50,58,.06)' } }, y: { grid: { display: false } } } } }) : null;
 
   function render(s) {
     ['active_alerts:sAlerts', 'total_items:sItems', 'low_stock:sLow', 'out_of_stock:sOut', 'needs_inspection:sInsp', 'due_replacement:sRepl'].forEach(p => { const [k, id] = p.split(':'); set(id, s[k]); });
+    if (inventoryChart && s.inventory_mix) {
+      inventoryChart.data.labels = s.inventory_mix.labels;
+      inventoryChart.data.datasets[0].data = s.inventory_mix.values;
+      inventoryChart.update();
+    }
+    if (ordersChart && s.order_mix) {
+      ordersChart.data.labels = s.order_mix.labels;
+      ordersChart.data.datasets[0].data = s.order_mix.values;
+      ordersChart.update();
+    }
     if (!s.can_monitor) return;
     set('latestPh', s.latest ? s.latest.ph : '—');
     set('latestStatus', s.latest ? s.latest.status : 'No readings yet');
@@ -132,7 +157,25 @@
     if (chart) AQ.setChart(chart, s.chart.labels, s.chart.values, s.ph_min, s.ph_max);
     if (mixChart) { mixChart.data.labels = s.status_mix.labels; mixChart.data.datasets[0].data = s.status_mix.values; mixChart.update(); }
     const body = document.getElementById('recentBody');
-    if (body && s.recent.length) body.innerHTML = s.recent.map(r => `<tr><td class="small">${r.at}</td><td class="fw-bold">${r.ph}</td><td><span class="pill pill-${r.class}">${r.status}</span></td></tr>`).join('');
+    if (body && s.recent.length) {
+      body.replaceChildren(...s.recent.map(r => {
+        const row = document.createElement('tr');
+        const at = document.createElement('td');
+        at.className = 'small';
+        at.textContent = String(r.at ?? '');
+        const ph = document.createElement('td');
+        ph.className = 'fw-bold';
+        ph.textContent = String(r.ph ?? '—');
+        const statusCell = document.createElement('td');
+        const badge = document.createElement('span');
+        const allowed = ['ok', 'warn', 'bad', 'info', 'muted'];
+        badge.className = 'pill pill-' + (allowed.includes(r.class) ? r.class : 'muted');
+        badge.textContent = String(r.status ?? 'Unknown');
+        statusCell.append(badge);
+        row.append(at, ph, statusCell);
+        return row;
+      }));
+    }
   }
   render(stats);
   AQ.poll('{{ route('dashboard.stats') }}', render, 15000);

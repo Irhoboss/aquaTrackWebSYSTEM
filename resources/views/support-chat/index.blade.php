@@ -47,7 +47,7 @@
 </div>
 @endsection
 @push('scripts')
-<script>
+<script nonce="{{ request()->attributes->get('csp_nonce') }}">
 (() => {
   const pane = document.getElementById('supportMessages');
   if (!pane) return;

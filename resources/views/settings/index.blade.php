@@ -8,8 +8,12 @@
     <div class="col-12"><label class="form-label">Station name</label><input name="station_name" value="{{ old('station_name', $s['station_name']) }}" class="form-control" required></div>
     <div class="col-12"><label class="form-label">Address</label><input name="station_address" value="{{ old('station_address', $s['station_address']) }}" class="form-control"></div>
     <div class="col-12"><label class="form-label">Contact</label><input name="station_contact" value="{{ old('station_contact', $s['station_contact']) }}" class="form-control"></div>
+    <div class="col-12"><label class="form-label">Legal business/operator name</label><input name="legal_operator_name" value="{{ old('legal_operator_name', $s['legal_operator_name']) }}" class="form-control"><div class="form-text">Displayed on public policy pages. Enter the registered name; do not use a placeholder in production.</div></div>
+    <div class="col-12"><label class="form-label">Privacy contact email</label><input type="email" name="privacy_contact_email" value="{{ old('privacy_contact_email', $s['privacy_contact_email']) }}" class="form-control"></div>
+    <div class="col-12"><label class="form-label">Delivery fee (PHP)</label><input type="number" step="0.01" min="0" name="delivery_fee" value="{{ old('delivery_fee', $s['delivery_fee']) }}" class="form-control" required><div class="form-text">Shown and included in checkout before an order is submitted.</div></div>
     <div class="col-md-6"><label class="form-label">Logo</label><input type="file" name="logo" accept="image/*" class="form-control"></div>
     <div class="col-md-6"><label class="form-label">Favicon</label><input type="file" name="favicon" accept="image/*" class="form-control"></div>
+    <div class="col-12 small text-muted">Only upload branding images that the station owns or is licensed to use.</div>
     <div class="col-12 small text-muted">Times are stored in UTC and displayed in Philippine time ({{ config('aquatrack.display_tz') }}).</div>
   </div></div></div>
 

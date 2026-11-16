@@ -36,6 +36,6 @@
 @endif
 
 @push('data')
-<script>window.__MSGS = @json($messages);</script>
+<script nonce="{{ request()->attributes->get('csp_nonce') }}">window.__MSGS = @json($messages);</script>
 @endpush
 @endsection

@@ -4,7 +4,7 @@
 @section('content')
 <div class="row g-3">
   <div class="col-lg-4"><div class="at-card card-body-pad text-center">
-    @if($user->avatar_url)<img class="at-avatar lg mb-3" src="{{ $user->avatar_url }}" alt="">@else<span class="at-avatar lg mb-3">{{ $user->initials }}</span>@endif
+    @if($user->avatar_url)<img class="at-avatar lg mb-3" src="{{ $user->avatar_url }}" alt="Profile picture of {{ $user->name }}">@else<span class="at-avatar lg mb-3">{{ $user->initials }}</span>@endif
     <div><span class="pill pill-info">{{ $user->role_label }}</span> <span class="pill pill-{{ $user->is_active ? 'ok' : 'muted' }}">{{ $user->is_active ? 'Active' : 'Inactive' }}</span></div>
     <dl class="text-start small mt-3 mb-0"><dt>Email</dt><dd>{{ $user->email }}</dd><dt>Phone</dt><dd>{{ $user->phone ?: '—' }}</dd><dt>Created</dt><dd>@dt($user->created_at)</dd><dt>Last sign-in</dt><dd class="mb-0">{{ $user->last_login_at ? \App\Support\Fmt::dt($user->last_login_at) : '—' }}</dd></dl>
     <div class="d-grid gap-2 mt-3"><a class="btn btn-soft" href="{{ route('users.edit', $user) }}">Edit account</a>

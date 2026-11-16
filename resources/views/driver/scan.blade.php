@@ -47,7 +47,7 @@
 @endsection
 @push('scripts')
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
-<script>
+<script nonce="{{ request()->attributes->get('csp_nonce') }}">
 (() => {
   const button = document.getElementById('startQr');
   const reader = document.getElementById('qr-reader');

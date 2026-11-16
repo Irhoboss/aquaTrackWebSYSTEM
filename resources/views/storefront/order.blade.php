@@ -4,7 +4,7 @@
 @section('content')
 <div class="checkout-layout">
   <section class="at-card card-body-pad"><div class="section-heading"><div><span class="small text-muted">ORDER STATUS</span><h2 class="h4 mb-0">{{ str($order->status)->replace('_', ' ')->title() }}</h2></div><span class="pill {{ $order->status === 'delivered' ? 'pill-ok' : ($order->status === 'cancelled' ? 'pill-bad' : 'pill-info') }}">{{ $order->order_number }}</span></div>
-    <div class="table-responsive mt-3"><table class="table align-middle"><thead><tr><th>Product</th><th>Quantity</th><th class="text-end">Subtotal</th></tr></thead><tbody>@foreach($order->items as $item)<tr><td>{{ $item->product_name }}</td><td>{{ $item->quantity }}</td><td class="text-end">₱{{ number_format($item->subtotal, 2) }}</td></tr>@endforeach</tbody><tfoot><tr><th colspan="2">Total</th><th class="text-end">₱{{ number_format($order->total, 2) }}</th></tr></tfoot></table></div>
+    <div class="table-responsive mt-3"><table class="table align-middle"><thead><tr><th>Product</th><th>Quantity</th><th class="text-end">Subtotal</th></tr></thead><tbody>@foreach($order->items as $item)<tr><td>{{ $item->product_name }}</td><td>{{ $item->quantity }}</td><td class="text-end">₱{{ number_format($item->subtotal, 2) }}</td></tr>@endforeach</tbody><tfoot><tr><th colspan="2">Delivery fee</th><th class="text-end">₱{{ number_format($order->delivery_fee, 2) }}</th></tr><tr><th colspan="2">Total</th><th class="text-end">₱{{ number_format($order->total, 2) }}</th></tr></tfoot></table></div>
     <p class="small text-muted mb-0">Placed @dt($order->created_at)</p>
     @if($order->status === 'out_for_delivery')<div class="order-driver-qr"><div id="customerOrderQr" data-code="AQ|ORDER|{{ $order->delivery_token }}"></div><span>Show this QR to your delivery driver</span></div>@endif
   </section>
@@ -12,5 +12,5 @@
 </div>
 @endsection
 @if($order->status === 'out_for_delivery')
-@push('scripts')<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script><script>const qr=document.getElementById('customerOrderQr');if(qr&&window.QRCode)new QRCode(qr,{text:qr.dataset.code,width:156,height:156,colorDark:'#14323a',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M});</script>@endpush
+@push('scripts')<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script><script nonce="{{ request()->attributes->get('csp_nonce') }}">const qr=document.getElementById('customerOrderQr');if(qr&&window.QRCode)new QRCode(qr,{text:qr.dataset.code,width:156,height:156,colorDark:'#14323a',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M});</script>@endpush
 @endif

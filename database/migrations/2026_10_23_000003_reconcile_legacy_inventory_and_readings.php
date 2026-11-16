@@ -77,8 +77,8 @@ return new class extends Migration {
 
             DB::statement("UPDATE readings SET ph_value = ph WHERE ph_value IS NULL");
             DB::statement("UPDATE readings SET raw_voltage_mv = ROUND(voltage * 1000) WHERE raw_voltage_mv IS NULL AND voltage IS NOT NULL");
-            DB::statement("UPDATE readings SET measured_at = COALESCE(created_at, NOW()) WHERE measured_at IS NULL");
-            DB::statement("UPDATE readings SET received_at = COALESCE(created_at, NOW()) WHERE received_at IS NULL");
+            DB::statement("UPDATE readings SET measured_at = COALESCE(created_at, CURRENT_TIMESTAMP) WHERE measured_at IS NULL");
+            DB::statement("UPDATE readings SET received_at = COALESCE(created_at, CURRENT_TIMESTAMP) WHERE received_at IS NULL");
             DB::statement("UPDATE readings SET status = CASE WHEN ph IS NULL OR ph < 0 OR ph > 14 THEN 'invalid' WHEN ph < 6.5 THEN 'low' WHEN ph > 8.5 THEN 'high' ELSE 'normal' END");
         }
 

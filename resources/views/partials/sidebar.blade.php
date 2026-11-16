@@ -25,6 +25,9 @@
       ['settings.index', 'bi-sliders', 'Settings', 'settings.manage', 'settings.*'],
     ],
   ];
+  if (auth()->user()->role === 'customer') {
+    unset($groups['Customer care']);
+  }
   if (auth()->user()->role === 'driver') {
     $groups = ['Driver' => [
       ['driver.dashboard', 'bi-speedometer2', 'Delivery home', 'driver.access', 'driver.dashboard'],
@@ -56,5 +59,5 @@
     @endif
   @endforeach
   <div class="grp">Account</div>
-  <a href="{{ route('profile.show') }}" class="{{ request()->routeIs('profile.*') ? 'active' : '' }}"><i class="bi bi-person-circle"></i>My profile</a>
+  <a href="{{ route('profile.show') }}" class="{{ request()->routeIs('profile.*') ? 'active' : '' }}"><i class="bi bi-person-circle"></i><span>My profile</span></a>
 </nav>

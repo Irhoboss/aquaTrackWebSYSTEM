@@ -35,7 +35,7 @@
 
 @if($report['chart'])
 @push('scripts')
-<script>
+<script nonce="{{ request()->attributes->get('csp_nonce') }}">
 const c = @json($report['chart']);
 new Chart(document.getElementById('chart'), { type: c.type, data: { labels: c.labels, datasets: [{ label: c.label, data: c.values, borderColor: '#14998b', backgroundColor: c.type === 'bar' ? 'rgba(43,196,180,.55)' : 'rgba(43,196,180,.15)', fill: c.type === 'line', tension: .3, borderRadius: 8 }] },
   options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: c.type === 'bar' } } } });

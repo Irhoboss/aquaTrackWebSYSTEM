@@ -1,9 +1,14 @@
 <?php
 
 use App\Http\Controllers\{AlertController, AuditController, AuthController, ContainerController, DashboardController,
-    AttendanceController, DriverController, InventoryController, MonitoringController, NotificationController, OrderManagementController, ProfileController, ReportController, StorefrontController, SupportChatController,
+    AttendanceController, DriverController, InventoryController, LegalController, MonitoringController, NotificationController, OrderManagementController, ProfileController, ReportController, StorefrontController, SupportChatController,
     SettingController, StockController, SupplierController, UserController};
 use Illuminate\Support\Facades\Route;
+
+Route::get('/privacy-policy', [LegalController::class, 'privacy'])->name('legal.privacy');
+Route::get('/terms-of-service', [LegalController::class, 'terms'])->name('legal.terms');
+Route::get('/refund-policy', [LegalController::class, 'refunds'])->name('legal.refunds');
+Route::get('/cookie-policy', [LegalController::class, 'cookies'])->name('legal.cookies');
 
 Route::get('/', function () {
     $products = \App\Models\Product::query()
@@ -19,12 +24,17 @@ Route::get('/', function () {
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
     Route::post('/login', [AuthController::class, 'login'])->name('login.attempt');
+    Route::get('/auth/google/redirect', [AuthController::class, 'redirectToGoogle'])->name('google.redirect');
+    Route::get('/auth/google/callback', [AuthController::class, 'handleGoogleCallback'])->name('google.callback');
     Route::get('/forgot-password', [AuthController::class, 'showForgot'])->name('password.request');
-    Route::post('/forgot-password', [AuthController::class, 'sendReset'])->name('password.email');
-    Route::get('/reset-password/{token}', [AuthController::class, 'showReset'])->name('password.reset');
-    Route::post('/reset-password', [AuthController::class, 'reset'])->name('password.update');
+    Route::post('/forgot-password', [AuthController::class, 'sendReset'])->middleware('throttle:account-registration')->name('password.email');
+    Route::get('/forgot-password/verify', [AuthController::class, 'showResetOtp'])->name('password.otp.form');
+    Route::post('/forgot-password/verify', [AuthController::class, 'verifyPasswordReset'])->name('password.otp.verify');
     Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
-    Route::post('/register', [AuthController::class, 'register'])->name('register.store');
+    Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:account-registration')->name('register.store');
+    Route::get('/register/verify', [AuthController::class, 'showRegistrationVerification'])->name('register.verify');
+    Route::post('/register/verify', [AuthController::class, 'verifyRegistration'])->middleware('throttle:account-registration')->name('register.verify.submit');
+    Route::post('/register/verify/resend', [AuthController::class, 'resendRegistrationVerification'])->middleware('throttle:account-registration')->name('register.verify.resend');
 });
 
 Route::middleware(['auth', 'active'])->group(function () {
@@ -36,7 +46,7 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::patch('/cart/{product}', [StorefrontController::class, 'updateCart'])->name('cart.update');
         Route::delete('/cart/{product}', [StorefrontController::class, 'removeFromCart'])->name('cart.remove');
         Route::get('/checkout', [StorefrontController::class, 'checkout'])->name('checkout.index');
-        Route::post('/checkout', [StorefrontController::class, 'placeOrder'])->name('checkout.store');
+        Route::post('/checkout', [StorefrontController::class, 'placeOrder'])->middleware('throttle:order-placement')->name('checkout.store');
         Route::get('/my-orders', [StorefrontController::class, 'orders'])->name('orders.index');
         Route::get('/my-orders/{order}', [StorefrontController::class, 'showOrder'])->name('orders.show');
     });
@@ -60,7 +70,12 @@ Route::middleware(['auth', 'active'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::put('/profile/password', [ProfileController::class, 'password'])->name('profile.password');
+    Route::post('/profile/password/otp/verify', [ProfileController::class, 'verifyPasswordOtp'])->name('profile.password.otp.verify');
+    Route::post('/profile/password/otp/resend', [ProfileController::class, 'resendPasswordOtp'])->name('profile.password.otp.resend');
     Route::delete('/profile/avatar', [ProfileController::class, 'removeAvatar'])->name('profile.avatar.remove');
+    Route::delete('/profile/account', [ProfileController::class, 'destroyAccount'])
+        ->middleware('throttle:account-deletion')
+        ->name('profile.account.destroy');
 
     // Notifications
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');

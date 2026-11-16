@@ -24,4 +24,4 @@
   @endif
 </section>
 @endsection
-@push('scripts')<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script><script>document.querySelectorAll('.manage-order-qr').forEach(el=>{if(window.QRCode)new QRCode(el,{text:el.dataset.orderCode,width:104,height:104,colorDark:'#14323a',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M})});</script>@endpush
+@push('scripts')<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script><script nonce="{{ request()->attributes->get('csp_nonce') }}">document.querySelectorAll('.manage-order-qr').forEach(el=>{if(window.QRCode)new QRCode(el,{text:el.dataset.orderCode,width:104,height:104,colorDark:'#14323a',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M})});</script>@endpush

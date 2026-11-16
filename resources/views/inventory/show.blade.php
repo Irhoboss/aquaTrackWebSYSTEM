@@ -71,7 +71,7 @@
 
 @push('head')<style>.seg label{cursor:pointer}.seg-opt{padding:.4rem .6rem;border-radius:999px;font-size:.82rem;font-weight:700;color:var(--at-muted)}.seg input:checked + .seg-opt{background:linear-gradient(135deg,#3ccbbb,var(--at-teal-dark));color:#fff}</style>@endpush
 @push('scripts')
-<script>
+<script nonce="{{ request()->attributes->get('csp_nonce') }}">
 (function () {
   const form = document.getElementById('stockForm'); if (!form) return;
   const label = document.getElementById('qtyLabel'); const unit = @json($item->unit);

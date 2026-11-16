@@ -16,7 +16,11 @@ class User extends Authenticatable
         return [
             'is_active' => 'boolean',
             'must_change_password' => 'boolean',
+            'email_verified_at' => 'datetime',
             'last_login_at' => 'datetime',
+            'terms_accepted_at' => 'datetime',
+            'privacy_acknowledged_at' => 'datetime',
+            'age_confirmed_at' => 'datetime',
             'password' => 'hashed',
         ];
     }

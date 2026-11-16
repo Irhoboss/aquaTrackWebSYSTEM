@@ -71,6 +71,6 @@
 <script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 @endpush
 @push('data')
-<script>window.__SNAP = @json($snap);</script>
+<script nonce="{{ request()->attributes->get('csp_nonce') }}">window.__SNAP = @json($snap);</script>
 @endpush
 @endsection

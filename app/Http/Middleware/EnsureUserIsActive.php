@@ -19,8 +19,14 @@ class EnsureUserIsActive
             return redirect()->route('login')->withErrors(['login' => 'Your account has been deactivated.']);
         }
 
-        // Forced password change (temporary / reset passwords)
+        $googleAuthenticated = $user
+            && hash_equals(
+                (string) $user->getAuthIdentifier(),
+                (string) $request->session()->get('google_authenticated_user_id', '')
+            );
+
         if ($user && $user->must_change_password
+            && !$googleAuthenticated
             && !$request->routeIs('profile.*', 'logout')) {
             return redirect()->route('profile.show')->with('warning', 'Please change your temporary password before continuing.');
         }
